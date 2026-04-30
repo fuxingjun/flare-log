@@ -15,10 +15,16 @@ interface RateLimitOptions {
   maxRequests: number
 }
 
+/** 上次清理时间, 用于惰性清理过期记录 */
+let lastCleanup = 0
+
 /**
  * 基于 IP 的简单内存限流中间件
  * 注意: Cloudflare Workers 可能会在不同实例间重启, 此限流为尽力而为
  * 对于生产环境, 建议使用 Cloudflare 自带的 Rate Limiting 规则
+ *
+ * 使用惰性清理策略: 每个时间窗口结束后, 在下次请求时才清理过期记录
+ * 避免 setInterval 在全局作用域调用, 兼容 Cloudflare Workers 限制
  */
 export function rateLimit(options: RateLimitOptions) {
   const { windowMs, maxRequests } = options
@@ -26,25 +32,19 @@ export function rateLimit(options: RateLimitOptions) {
   // 内存存储: IP -> 限流记录
   const store = new Map<string, RateLimitEntry>()
 
-  // 定期清理过期记录, 防止内存泄漏
-  const cleanupInterval = setInterval(() => {
-    const now = Date.now()
-    for (const [ip, entry] of store) {
-      if (now >= entry.resetAt) {
-        store.delete(ip)
-      }
-    }
-  }, windowMs)
-
-  // Workers 环境下不需要清理定时器, 但防止引用丢失
-  if (typeof clearInterval === 'function') {
-    // 保持 interval 引用, 防止被 GC
-    globalThis.__flareLogCleanupInterval = cleanupInterval
-  }
-
   return createMiddleware<{ Bindings: Env }>(async (c, next) => {
     const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Real-IP') || 'unknown'
     const now = Date.now()
+
+    // 惰性清理: 超过一个时间窗口周期时, 清理所有过期记录
+    if (now - lastCleanup >= windowMs) {
+      for (const [key, entry] of store) {
+        if (now >= entry.resetAt) {
+          store.delete(key)
+        }
+      }
+      lastCleanup = now
+    }
 
     let entry = store.get(ip)
 
@@ -71,10 +71,4 @@ export function rateLimit(options: RateLimitOptions) {
 
     await next()
   })
-}
-
-// 扩展 globalThis 类型以存储清理定时器引用
-declare global {
-  // eslint-disable-next-line no-var
-  var __flareLogCleanupInterval: ReturnType<typeof setInterval> | undefined
 }
