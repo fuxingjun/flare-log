@@ -1,62 +1,115 @@
 import { Hono } from 'hono'
-import type { Env, LogEntry, BatchLogPayload, ApiResponse, StoredLog } from '../types'
+import type { Env, LogEntry, BatchLogPayload, ApiResponse } from '../types'
+import { normalizeLog } from '../utils'
 
-const VALID_LEVELS = new Set(['debug', 'info', 'warn', 'error'])
+/** 单条日志请求体的最大允许大小 (1MB) */
+const MAX_SINGLE_BODY_SIZE = 1024 * 1024
+
+/** 批量日志请求体的最大允许大小 (5MB) */
+const MAX_BATCH_BODY_SIZE = 5 * 1024 * 1024
+
+/** service 字段最大长度 */
+const MAX_SERVICE_LENGTH = 128
+
+/** message 字段最大长度 */
+const MAX_MESSAGE_LENGTH = 65536
+
+/** trace_id 字段最大长度 */
+const MAX_TRACE_ID_LENGTH = 128
+
+/** metadata JSON 最大长度 */
+const MAX_METADATA_LENGTH = 65536
 
 /**
- * 将外部传入的 LogEntry 标准化为数据库写入格式
- * - level 不合法时降级为 info
- * - timestamp 缺失时使用当前时间
- * - metadata 对象序列化为 JSON 字符串
+ * 安全地解析请求体 JSON
+ * - 检查 Content-Type
+ * - 检查请求体大小
+ * - 捕获 JSON 解析异常, 返回友好的 400 错误
  */
-function normalizeLog(entry: LogEntry): {
-  level: string
-  service: string
-  message: string
-  timestamp: string
-  trace_id: string | null
-  metadata: string | null
-} {
-  const level = VALID_LEVELS.has(entry.level) ? entry.level : 'info'
-  const timestamp = entry.timestamp || new Date().toISOString()
-  const trace_id = entry.trace_id || null
-  const metadata = entry.metadata ? JSON.stringify(entry.metadata) : null
+async function safeParseJson<T>(c: import('hono').Context<{ Bindings: Env }>, maxSize: number): Promise<T | Response> {
+  const contentType = c.req.header('Content-Type')
+  if (!contentType?.includes('application/json')) {
+    return c.json<ApiResponse>(
+      { success: false, error: 'Content-Type must be application/json' },
+      415,
+    )
+  }
 
-  return {
-    level,
-    service: entry.service,
-    message: entry.message,
-    timestamp,
-    trace_id,
-    metadata,
+  const contentLength = c.req.header('Content-Length')
+  if (contentLength && Number(contentLength) > maxSize) {
+    return c.json<ApiResponse>(
+      { success: false, error: 'Request body too large' },
+      413,
+    )
+  }
+
+  try {
+    return await c.req.json<T>()
+  } catch {
+    return c.json<ApiResponse>(
+      { success: false, error: 'Invalid JSON in request body' },
+      400,
+    )
   }
 }
 
-/** 将数据库行记录转换为 StoredLog 结构, metadata 从 JSON 字符串反序列化为对象 */
-function rowToStoredLog(row: Record<string, unknown>): StoredLog {
-  return {
-    id: row.id as number,
-    level: row.level as StoredLog['level'],
-    service: row.service as string,
-    message: row.message as string,
-    timestamp: row.timestamp as string,
-    trace_id: row.trace_id as string | undefined,
-    metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined,
-    created_at: row.created_at as string,
+/** 校验单条日志条目的字段合法性 */
+function validateLogEntry(entry: Partial<LogEntry>): string | null {
+  if (!entry.service || typeof entry.service !== 'string') {
+    return 'service is required and must be a string'
   }
+  if (entry.service.length > MAX_SERVICE_LENGTH) {
+    return `service must not exceed ${MAX_SERVICE_LENGTH} characters`
+  }
+  if (!entry.message || typeof entry.message !== 'string') {
+    return 'message is required and must be a string'
+  }
+  if (entry.message.length > MAX_MESSAGE_LENGTH) {
+    return `message must not exceed ${MAX_MESSAGE_LENGTH} characters`
+  }
+  if (entry.trace_id !== undefined && entry.trace_id !== null) {
+    if (typeof entry.trace_id !== 'string') {
+      return 'trace_id must be a string'
+    }
+    if (entry.trace_id.length > MAX_TRACE_ID_LENGTH) {
+      return `trace_id must not exceed ${MAX_TRACE_ID_LENGTH} characters`
+    }
+  }
+  if (entry.metadata !== undefined && entry.metadata !== null) {
+    if (typeof entry.metadata !== 'object' || Array.isArray(entry.metadata)) {
+      return 'metadata must be a JSON object'
+    }
+    try {
+      const serialized = JSON.stringify(entry.metadata)
+      if (serialized.length > MAX_METADATA_LENGTH) {
+        return `metadata must not exceed ${MAX_METADATA_LENGTH} characters when serialized`
+      }
+    } catch {
+      return 'metadata must be serializable to JSON'
+    }
+  }
+  if (entry.timestamp !== undefined && entry.timestamp !== null) {
+    if (typeof entry.timestamp !== 'string') {
+      return 'timestamp must be a string'
+    }
+    if (isNaN(Date.parse(entry.timestamp))) {
+      return 'timestamp must be a valid ISO 8601 date string'
+    }
+  }
+  return null
 }
 
 const app = new Hono<{ Bindings: Env }>()
 
 /** 接收单条日志并写入 D1 */
 app.post('/', async (c) => {
-  const body = await c.req.json<LogEntry>()
+  const parsed = await safeParseJson<LogEntry>(c, MAX_SINGLE_BODY_SIZE)
+  if (parsed instanceof Response) return parsed
 
-  if (!body.service || !body.message) {
-    return c.json<ApiResponse>(
-      { success: false, error: 'service and message are required' },
-      400,
-    )
+  const body = parsed
+  const validationError = validateLogEntry(body)
+  if (validationError) {
+    return c.json<ApiResponse>({ success: false, error: validationError }, 400)
   }
 
   const log = normalizeLog(body)
@@ -83,7 +136,10 @@ app.post('/', async (c) => {
  * - 使用 D1 batch API 在同一事务中写入, 保证原子性
  */
 app.post('/batch', async (c) => {
-  const body = await c.req.json<BatchLogPayload>()
+  const parsed = await safeParseJson<BatchLogPayload>(c, MAX_BATCH_BODY_SIZE)
+  if (parsed instanceof Response) return parsed
+
+  const body = parsed
 
   if (!body.logs || !Array.isArray(body.logs) || body.logs.length === 0) {
     return c.json<ApiResponse>(
@@ -92,7 +148,6 @@ app.post('/batch', async (c) => {
     )
   }
 
-  // 限制单次批量大小, 防止 D1 请求超时
   if (body.logs.length > 100) {
     return c.json<ApiResponse>(
       { success: false, error: 'Batch size must not exceed 100' },
@@ -100,11 +155,12 @@ app.post('/batch', async (c) => {
     )
   }
 
-  // 预校验所有条目的必填字段
-  for (const entry of body.logs) {
-    if (!entry.service || !entry.message) {
+  // 预校验所有条目的字段合法性
+  for (let i = 0; i < body.logs.length; i++) {
+    const validationError = validateLogEntry(body.logs[i])
+    if (validationError) {
       return c.json<ApiResponse>(
-        { success: false, error: 'Each log entry must have service and message' },
+        { success: false, error: `logs[${i}]: ${validationError}` },
         400,
       )
     }
@@ -128,4 +184,4 @@ app.post('/batch', async (c) => {
   )
 })
 
-export { app as ingest, rowToStoredLog }
+export { app as ingest }

@@ -28,9 +28,11 @@
 
 部署时无需修改任何代码, 只需在 Cloudflare Dashboard 中完成以下配置:
 
-1. 创建 D1 数据库, 并执行 `migrations/` 目录下的 SQL 文件初始化表结构
+1. 创建 D1 数据库
 2. 在 Worker 的 Settings > Bindings 中绑定 D1 数据库, 变量名设为 `DB`
 3. 在 Worker 的 Settings > Environment Variables 中添加 `API_KEY` 环境变量
+
+数据库表结构会在首次请求时自动创建, 无需手动执行 SQL。
 
 ## API 接口
 
@@ -39,8 +41,10 @@
 | `GET` | `/` | 服务信息 | 否 |
 | `POST` | `/api/logs` | 接收单条日志 | 是 |
 | `POST` | `/api/logs/batch` | 批量接收日志(≤100条) | 是 |
-| `GET` | `/api/logs` | 查询日志(支持过滤+分页) | 是 |
+| `GET` | `/api/logs` | 查询日志(支持过滤+分页+排序) | 是 |
 | `GET` | `/api/logs/:id` | 查询单条日志 | 是 |
+| `DELETE` | `/api/logs/:id` | 删除单条日志 | 是 |
+| `DELETE` | `/api/logs` | 批量清理日志(按service/before) | 是 |
 
 认证方式: `Authorization: Bearer <key>` 或 `X-API-Key: <key>`
 
@@ -50,6 +54,7 @@
 - 代码文件行数太大的话最好按对应语言的最佳实践分拆文件, 特别是超过 1000 行的文
 
 ### 文档
+- 文档中的说明尽量使用中文
 - 如果修改了文档中提及的内容, 需要及时更新文档
 
 ### 注释

@@ -26,12 +26,16 @@ export interface BatchLogPayload {
 /** 查询日志时的过滤参数 */
 export interface LogQueryParams {
   level?: LogLevel
+  levels?: string
   service?: string
   trace_id?: string
+  message?: string
   start_time?: string
   end_time?: string
   limit?: number
   offset?: number
+  sort?: 'timestamp' | 'created_at'
+  order?: 'asc' | 'desc'
 }
 
 /** 分页响应结构 */
