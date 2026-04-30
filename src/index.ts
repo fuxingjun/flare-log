@@ -37,6 +37,11 @@ app.get('/', (c) => {
   })
 })
 
+/** API 文档页面, 重定向到静态 HTML 文件, 无需认证 */
+app.get('/docs', (c) => {
+  return c.redirect('/docs.html')
+})
+
 app.route('/api/logs', ingest)
 app.route('/api/logs', query)
 app.route('/api/logs', manage)
