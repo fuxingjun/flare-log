@@ -4,19 +4,10 @@
  * 所有 DDL 均使用 IF NOT EXISTS, 确保幂等安全
  */
 
-/** D1 的 exec() 一次只能执行一条 SQL, 需要将多条语句拆开 */
+/** D1 的 exec() 一次只能执行一条 SQL, 且不支持多行格式, 需要拆开并写成单行 */
 const INIT_STATEMENTS = [
   // 建表
-  `CREATE TABLE IF NOT EXISTS logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    level TEXT NOT NULL DEFAULT 'info',
-    service TEXT NOT NULL,
-    message TEXT NOT NULL,
-    trace_id TEXT,
-    metadata TEXT,
-    timestamp TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )`,
+  "CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY AUTOINCREMENT, level TEXT NOT NULL DEFAULT 'info', service TEXT NOT NULL, message TEXT NOT NULL, trace_id TEXT, metadata TEXT, timestamp TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')))",
   // 基础索引
   'CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp)',
   'CREATE INDEX IF NOT EXISTS idx_logs_level ON logs(level)',
