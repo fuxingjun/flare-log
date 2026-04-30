@@ -70,8 +70,17 @@ app.route('/api/logs', ingest)
 app.route('/api/logs', query)
 app.route('/api/logs', manage)
 
-app.notFound((c) => {
-  return c.json({ success: false, error: 'Not Found', detail: `${c.req.method} ${c.req.path} does not exist` }, 404)
+/**
+ * 404 处理: API 路径返回 JSON 错误, 其它路径转发到静态资源服务
+ * 在 run_worker_first 模式下, Worker 优先处理所有请求,
+ * 非API路径需要通过 env.ASSETS.fetch() 转发到静态资源层,
+ * 否则静态文件 (如 index.html) 会返回 404
+ */
+app.notFound(async (c) => {
+  if (c.req.path.startsWith('/api')) {
+    return c.json({ success: false, error: 'Not Found', detail: `${c.req.method} ${c.req.path} does not exist` }, 404)
+  }
+  return c.env.ASSETS.fetch(c.req.raw)
 })
 
 /**

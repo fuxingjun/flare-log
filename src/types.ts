@@ -60,6 +60,8 @@ export interface ApiResponse<T = unknown> {
 type Env = {
   DB: D1Database
   API_KEY: string
+  /** 静态资源绑定, 由 Cloudflare Assets 自动提供, 用于 run_worker_first 模式下手动转发请求到静态资源 */
+  ASSETS: Fetcher
 }
 
 export type { Env }
