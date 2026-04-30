@@ -53,8 +53,9 @@ migrations/
 1. 创建 D1 数据库
 2. 在 Worker 的 Settings > Bindings 中绑定 D1 数据库, 变量名设为 `DB`
 3. 在 Worker 的 Settings > Environment Variables 中添加 `API_KEY` 环境变量
+4. 使用 `npm run deploy` 或 `wrangler deploy` 部署
 
-数据库表结构会在首次请求时自动创建, 无需手动执行 SQL。
+部署命令会自动上传 `public/` 目录中的前端页面和 Worker 代码。数据库表结构会在首次请求时自动创建, 无需手动执行 SQL。
 
 ## API 接口
 

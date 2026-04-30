@@ -36,7 +36,7 @@ npm run deploy
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| `GET` | `/` | 服务信息 | 否 |
+| `GET` | `/api` | 服务信息 | 否 |
 | `POST` | `/api/logs` | 接收单条日志 | 是 |
 | `POST` | `/api/logs/batch` | 批量接收日志 (≤100条) | 是 |
 | `GET` | `/api/logs` | 查询日志 (过滤 + 分页 + 排序) | 是 |
@@ -70,8 +70,4 @@ CREATE TABLE logs (
 - **日志查看器**: 访问 Worker 根 URL, 在 Settings 面板配置 API Base URL 和 API Key 后即可查询日志
 - **API 文档**: 访问 `/docs` 查看交互式 API 文档
 
-## 类型生成
 
-```bash
-npm run cf-typegen
-```
