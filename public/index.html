@@ -421,11 +421,11 @@
 
   <div class="config-panel" id="configPanel">
     <div>
-      <label for="apiBase">API Base URL</label>
-      <input type="text" id="apiBase" placeholder="https://your-worker.workers.dev">
+      <label for="apiBase">API Base URL <span style="font-size:10px;color:var(--text-dim)">(留空则使用当前域名)</span></label>
+      <input type="text" id="apiBase" placeholder="默认使用当前页面域名">
     </div>
     <div>
-      <label for="apiKey">API Key</label>
+      <label for="apiKey">API Key <span style="font-size:10px;color:var(--text-dim)">(存储于浏览器本地)</span></label>
       <input type="password" id="apiKey" placeholder="Your API Key">
     </div>
     <button class="btn" onclick="saveConfig()">Save</button>
@@ -471,7 +471,7 @@
     <div id="logContainer">
       <div class="empty-state">
         <div class="icon">📋</div>
-        <p>Configure your API Base URL and API Key, then search for logs.</p>
+        <p>Configure your API Key, then search for logs.</p>
       </div>
     </div>
     <div class="pagination" id="pagination" style="display:none;"></div>
@@ -483,7 +483,7 @@
     const PAGE_SIZE = 50
 
     function getApiBase() {
-      return localStorage.getItem('flarelog_api_base') || ''
+      return localStorage.getItem('flarelog_api_base') || window.location.origin
     }
 
     function getApiKey() {
@@ -496,13 +496,19 @@
     }
 
     function saveConfig() {
-      localStorage.setItem('flarelog_api_base', document.getElementById('apiBase').value.replace(/\/+$/, ''))
+      const base = document.getElementById('apiBase').value.trim().replace(/\/+$/, '')
+      if (base) {
+        localStorage.setItem('flarelog_api_base', base)
+      } else {
+        localStorage.removeItem('flarelog_api_base')
+      }
       localStorage.setItem('flarelog_api_key', document.getElementById('apiKey').value)
       showToast('Settings saved')
     }
 
     function loadConfig() {
-      document.getElementById('apiBase').value = getApiBase()
+      const savedBase = localStorage.getItem('flarelog_api_base')
+      document.getElementById('apiBase').value = savedBase || ''
       document.getElementById('apiKey').value = getApiKey()
     }
 
@@ -560,8 +566,8 @@
       const base = getApiBase()
       const key = getApiKey()
 
-      if (!base || !key) {
-        showToast('Please configure API Base URL and API Key first')
+      if (!key) {
+        showToast('Please configure API Key first')
         document.getElementById('configPanel').classList.add('open')
         return
       }
