@@ -10,7 +10,10 @@ export const auth = createMiddleware<{ Bindings: Env }>(async (c, next) => {
   const apiKey = c.env.API_KEY
 
   if (!apiKey) {
-    return c.json({ success: false, error: 'API_KEY not configured' }, 500)
+    return c.json(
+      { success: false, error: 'API_KEY not configured. Please add API_KEY in Worker Settings > Environment Variables.' },
+      500,
+    )
   }
 
   // 优先从 Authorization header 获取, 其次从 X-API-Key 获取

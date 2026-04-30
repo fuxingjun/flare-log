@@ -17,8 +17,15 @@ app.use('*', logger())
 /**
  * 数据库自动初始化中间件
  * 首次请求时自动创建表和索引, 后续请求跳过
+ * 同时检查 D1 绑定是否配置
  */
 app.use('*', async (c, next) => {
+  if (!c.env.DB) {
+    return c.json(
+      { success: false, error: 'D1 database not bound. Please add a D1 binding named "DB" in Worker Settings > Bindings.' },
+      500,
+    )
+  }
   await initDatabase(c.env.DB)
   await next()
 })
@@ -53,8 +60,9 @@ app.notFound((c) => {
 /**
  * 全局错误处理
  * - HTTPException: Hono 框架抛出的 HTTP 异常, 保留其状态码和消息
- * - TypeError: 通常是请求体解析失败或绑定缺失, 返回 400 或 500
- * - 其它异常: 记录日志后返回 500, 开发环境下附带错误信息
+ * - TypeError: 通常是请求体解析失败, 返回 400
+ * - 其它异常: 记录日志后返回 500
+ * 环境变量缺失 (DB/API_KEY) 已在中间件层面主动检查, 不会走到这里
  */
 app.onError((err, c) => {
   if (err instanceof Error && 'status' in err) {
@@ -65,16 +73,7 @@ app.onError((err, c) => {
     }
   }
 
-  // TypeError 可能是 D1 绑定缺失 (Cannot read properties of undefined)
   if (err instanceof TypeError) {
-    const msg = err.message
-    if (msg.includes('undefined') || msg.includes('null')) {
-      console.error('Binding error (likely missing D1 or env var):', err)
-      return c.json(
-        { success: false, error: 'Server configuration error - check D1 binding and environment variables' },
-        500,
-      )
-    }
     return c.json({ success: false, error: 'Invalid request' }, 400)
   }
 
