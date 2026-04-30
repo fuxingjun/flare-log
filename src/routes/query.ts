@@ -82,8 +82,8 @@ app.get('/', async (c) => {
     bindings.push(...effectiveLevels)
   }
   if (params.service) {
-    conditions.push('service = ?')
-    bindings.push(params.service)
+    conditions.push('service LIKE ?')
+    bindings.push(`%${params.service}%`)
   }
   if (params.trace_id) {
     conditions.push('trace_id = ?')
@@ -134,6 +134,40 @@ app.get('/', async (c) => {
     console.error('Query error:', err)
     return c.json<ApiResponse>(
       { success: false, error: 'Failed to query logs', detail: err instanceof Error ? err.message : undefined },
+      500,
+    )
+  }
+})
+
+/**
+ * 查询所有去重的 service 列表, 用于前端下拉选项
+ * 支持可选的 search 参数进行模糊过滤, 限制最多返回 500 条
+ */
+app.get('/services', async (c) => {
+  const search = c.req.query('search')
+
+  try {
+    let sql: string
+    const bindings: unknown[] = []
+
+    if (search) {
+      sql = 'SELECT DISTINCT service FROM logs WHERE service LIKE ? ORDER BY service LIMIT 500'
+      bindings.push(`%${search}%`)
+    } else {
+      sql = 'SELECT DISTINCT service FROM logs ORDER BY service LIMIT 500'
+    }
+
+    const rows = await c.env.DB.prepare(sql)
+      .bind(...bindings)
+      .all<{ service: string }>()
+
+    const services = (rows.results || []).map((r) => r.service)
+
+    return c.json<ApiResponse<string[]>>({ success: true, data: services })
+  } catch (err) {
+    console.error('Query services error:', err)
+    return c.json<ApiResponse>(
+      { success: false, error: 'Failed to query services', detail: err instanceof Error ? err.message : undefined },
       500,
     )
   }
