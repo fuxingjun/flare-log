@@ -34,20 +34,28 @@ const INIT_STATEMENTS = [
  * 初始化数据库: 创建表和索引
  * 使用全局标记避免重复执行, 同一 Worker 实例只会初始化一次
  * 即使多个实例并发执行, IF NOT EXISTS 也保证了幂等性
+ * 初始化失败时抛出异常, 由调用方决定如何处理
  */
 export async function initDatabase(db: D1Database): Promise<void> {
   if (globalThis.__flareLogInitialized) return
 
-  try {
-    // D1 的 exec() 一次只能执行一条 SQL, 逐条执行
-    for (const sql of INIT_STATEMENTS) {
+  let lastError: unknown
+  for (const sql of INIT_STATEMENTS) {
+    try {
       await db.exec(sql)
+    } catch (err) {
+      console.error(`FlareLog: failed to execute: ${sql}`, err)
+      lastError = err
     }
-    globalThis.__flareLogInitialized = true
-    console.log('FlareLog: database initialized successfully')
-  } catch (err) {
-    console.error('FlareLog: database initialization failed:', err)
   }
+
+  // 建表失败则抛出, 阻止请求继续
+  if (lastError) {
+    throw lastError
+  }
+
+  globalThis.__flareLogInitialized = true
+  console.log('FlareLog: database initialized successfully')
 }
 
 declare global {

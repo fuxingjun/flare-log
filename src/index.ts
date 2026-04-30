@@ -30,7 +30,19 @@ app.use('*', async (c, next) => {
       500,
     )
   }
-  await initDatabase(c.env.DB)
+  try {
+    await initDatabase(c.env.DB)
+  } catch (err) {
+    console.error('Database initialization failed:', err)
+    return c.json(
+      {
+        success: false,
+        error: 'Database initialization failed',
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      500,
+    )
+  }
   await next()
 })
 
