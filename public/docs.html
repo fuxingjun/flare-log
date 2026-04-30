@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlareLog API 文档</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-hover: #242836;
+      --border: #2e3348;
+      --text: #e1e4ed;
+      --text-dim: #8b8fa3;
+      --accent: #6c8cff;
+      --accent-hover: #5a7af0;
+      --error: #ff6b6b;
+      --warn: #ffd93d;
+      --info: #6bcb77;
+      --debug: #8b8fa3;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .header .version {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-left: 8px;
+    }
+
+    .header nav {
+      margin-left: auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .header nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+
+    .header nav a:hover {
+      color: var(--accent);
+    }
+
+    .layout {
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      padding: 20px 0 20px 24px;
+      position: sticky;
+      top: 57px;
+      height: calc(100vh - 57px);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .sidebar h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      padding-left: 12px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .sidebar li a {
+      display: block;
+      padding: 5px 12px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .sidebar li a:hover {
+      color: var(--text);
+      background: var(--surface-hover);
+    }
+
+    .sidebar li a.active {
+      color: var(--accent);
+      background: var(--surface-hover);
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px 24px 80px 24px;
+      min-width: 0;
+    }
+
+    .content h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 48px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .content h2:first-child {
+      margin-top: 0;
+    }
+
+    .content h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 32px 0 12px 0;
+    }
+
+    .content h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 20px 0 8px 0;
+    }
+
+    .content p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .content ul,
+    .content ol {
+      margin: 8px 0;
+      padding-left: 24px;
+      font-size: 14px;
+    }
+
+    .content li {
+      margin: 4px 0;
+      color: var(--text);
+    }
+
+    .content blockquote {
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      padding: 12px 16px;
+      margin: 12px 0;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .content blockquote strong {
+      color: var(--text);
+    }
+
+    .content hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface);
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      color: var(--text);
+    }
+
+    td code,
+    th code {
+      background: var(--surface-hover);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: var(--accent);
+    }
+
+    code {
+      background: var(--surface-hover);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: var(--accent);
+    }
+
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      overflow-x: auto;
+      margin: 12px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .method-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .method-badge.get {
+      background: rgba(107, 203, 119, 0.15);
+      color: var(--info);
+    }
+
+    .method-badge.post {
+      background: rgba(108, 140, 255, 0.15);
+      color: var(--accent);
+    }
+
+    .method-badge.delete {
+      background: rgba(255, 107, 107, 0.15);
+      color: var(--error);
+    }
+
+    .endpoint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+    }
+
+    .endpoint-path {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tag.required {
+      background: rgba(255, 107, 107, 0.12);
+      color: var(--error);
+    }
+
+    .tag.optional {
+      background: rgba(139, 143, 163, 0.15);
+      color: var(--text-dim);
+    }
+
+    .tag.auth {
+      background: rgba(255, 217, 61, 0.12);
+      color: var(--warn);
+    }
+
+    .tag.no-auth {
+      background: rgba(107, 203, 119, 0.12);
+      color: var(--info);
+    }
+
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 16px 0;
+    }
+
+    .section-card>h3 {
+      margin-top: 0;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        display: none;
+      }
+
+      .content {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>FlareLog<span class="version">API 文档</span></h1>
+    <nav>
+      <a href="/">日志查看器</a>
+      <a href="/docs">API 文档</a>
+    </nav>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>概览</h3>
+      <ul>
+        <li><a href="#auth">认证</a></li>
+        <li><a href="#rate-limit">限流</a></li>
+        <li><a href="#response-format">响应格式</a></li>
+      </ul>
+      <h3>接口</h3>
+      <ul>
+        <li><a href="#api-service-info">GET /</a></li>
+        <li><a href="#api-post-log">POST /api/logs</a></li>
+        <li><a href="#api-post-batch">POST /api/logs/batch</a></li>
+        <li><a href="#api-get-logs">GET /api/logs</a></li>
+        <li><a href="#api-get-log">GET /api/logs/:id</a></li>
+        <li><a href="#api-delete-log">DELETE /api/logs/:id</a></li>
+        <li><a href="#api-delete-logs">DELETE /api/logs</a></li>
+      </ul>
+      <h3>参考</h3>
+      <ul>
+        <li><a href="#data-structures">数据结构</a></li>
+        <li><a href="#error-codes">错误码</a></li>
+        <li><a href="#best-practices">最佳实践</a></li>
+      </ul>
+    </aside>
+
+    <main class="content">
+      <p>FlareLog 是一个轻量级日志接收与查询服务, 基于 Cloudflare Workers + D1 构建。</p>
+      <ul>
+        <li><strong>协议</strong>: HTTPS</li>
+        <li><strong>数据格式</strong>: JSON</li>
+        <li><strong>Base URL</strong>: <code>https://your-worker.workers.dev</code></li>
+      </ul>
+
+      <!-- 认证 -->
+      <h2 id="auth">认证</h2>
+      <p>所有 <code>/api/*</code> 接口均需认证。支持两种方式 (任选其一):</p>
+
+      <h4>方式一: Authorization Header (推荐)</h4>
+      <pre><code>Authorization: Bearer &lt;API_KEY&gt;</code></pre>
+
+      <h4>方式二: X-API-Key Header</h4>
+      <pre><code>X-API-Key: &lt;API_KEY&gt;</code></pre>
+
+      <p>未认证或 Key 错误时返回:</p>
+      <pre><code>HTTP/1.1 401 Unauthorized
+
+{
+  "success": false,
+  "error": "Unauthorized"
+}</code></pre>
+
+      <!-- 限流 -->
+      <h2 id="rate-limit">限流</h2>
+      <p>写入接口有基于 IP 的频率限制:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>接口</th>
+            <th>限制</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>POST /api/logs</code></td>
+            <td>60 次/分钟</td>
+          </tr>
+          <tr>
+            <td><code>POST /api/logs/batch</code></td>
+            <td>20 次/分钟</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>每次请求都会返回以下响应头, 可据此调整调用频率:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>响应头</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>X-RateLimit-Limit</code></td>
+            <td>时间窗口内最大请求数</td>
+          </tr>
+          <tr>
+            <td><code>X-RateLimit-Remaining</code></td>
+            <td>剩余可用请求数</td>
+          </tr>
+          <tr>
+            <td><code>X-RateLimit-Reset</code></td>
+            <td>限流窗口重置时间 (Unix 时间戳, 秒)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>触发限流时返回:</p>
+      <pre><code>HTTP/1.1 429 Too Many Requests
+Retry-After: 30
+
+{
+  "success": false,
+  "error": "Too many requests, please try again later"
+}</code></pre>
+
+      <!-- 统一响应格式 -->
+      <h2 id="response-format">统一响应格式</h2>
+      <p>所有接口均返回 JSON, 遵循统一结构:</p>
+      <h4>成功</h4>
+      <pre><code>{
+  "success": true,
+  "data": { ... }
+}</code></pre>
+      <h4>失败</h4>
+      <pre><code>{
+  "success": false,
+  "error": "错误描述信息"
+}</code></pre>
+
+      <hr>
+
+      <!-- 1. 服务信息 -->
+      <h2 id="api-service-info">1. 服务信息</h2>
+      <div class="endpoint">
+        <span class="method-badge get">GET</span>
+        <span class="endpoint-path">/</span>
+        <span class="tag no-auth">无需认证</span>
+      </div>
+      <p>获取服务名称和版本号。</p>
+      <h4>响应示例</h4>
+      <pre><code>{
+  "name": "FlareLog",
+  "version": "0.2.0",
+  "description": "Lightweight log service on Cloudflare Workers + D1"
+}</code></pre>
+
+      <!-- 2. 写入单条日志 -->
+      <h2 id="api-post-log">2. 写入单条日志</h2>
+      <div class="endpoint">
+        <span class="method-badge post">POST</span>
+        <span class="endpoint-path">/api/logs</span>
+        <span class="tag auth">需认证</span>
+      </div>
+
+      <h4>请求头</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Header</th>
+            <th>值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Content-Type</code></td>
+            <td><code>application/json</code></td>
+          </tr>
+          <tr>
+            <td><code>Authorization</code></td>
+            <td><code>Bearer &lt;API_KEY&gt;</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>请求体</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>字段</th>
+            <th>类型</th>
+            <th>必填</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>service</code></td>
+            <td>string</td>
+            <td><span class="tag required">是</span></td>
+            <td>服务名称, 最长 128 字符</td>
+          </tr>
+          <tr>
+            <td><code>message</code></td>
+            <td>string</td>
+            <td><span class="tag required">是</span></td>
+            <td>日志消息, 最长 65536 字符</td>
+          </tr>
+          <tr>
+            <td><code>level</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否</span></td>
+            <td><code>debug</code> / <code>info</code> / <code>warn</code> / <code>error</code>, 默认
+              <code>info</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>timestamp</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否</span></td>
+            <td>日志时间 (ISO 8601), 缺省使用服务器当前时间</td>
+          </tr>
+          <tr>
+            <td><code>trace_id</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否</span></td>
+            <td>链路追踪 ID, 最长 128 字符</td>
+          </tr>
+          <tr>
+            <td><code>metadata</code></td>
+            <td>object</td>
+            <td><span class="tag optional">否</span></td>
+            <td>附加元数据, 必须是 JSON 对象, 序列化后最长 65536 字符</td>
+          </tr>
+        </tbody>
+      </table>
+      <blockquote><strong>注意</strong>: <code>level</code> 传入无效值时不会报错, 会自动降级为 <code>info</code>。</blockquote>
+
+      <h4>请求示例</h4>
+      <pre><code>{
+  "level": "error",
+  "service": "api-gateway",
+  "message": "Connection timeout to database",
+  "timestamp": "2025-04-30T10:00:00.000Z",
+  "trace_id": "abc-123-def",
+  "metadata": {
+    "host": "db-primary",
+    "port": 5432,
+    "retry_count": 3
+  }
+}</code></pre>
+
+      <h4>成功响应 (201)</h4>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "id": 1
+  }
+}</code></pre>
+      <p><code>id</code> 为日志的唯一标识, 可用于后续查询和删除。</p>
+
+      <!-- 3. 批量写入 -->
+      <h2 id="api-post-batch">3. 批量写入日志</h2>
+      <div class="endpoint">
+        <span class="method-badge post">POST</span>
+        <span class="endpoint-path">/api/logs/batch</span>
+        <span class="tag auth">需认证</span>
+      </div>
+      <p>批量写入多条日志, 在同一事务中执行, 保证原子性 (全部成功或全部失败)。请求体最大 5MB。</p>
+
+      <h4>请求体</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>字段</th>
+            <th>类型</th>
+            <th>必填</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>logs</code></td>
+            <td>LogEntry[]</td>
+            <td><span class="tag required">是</span></td>
+            <td>日志数组, 1-100 条</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>每条 LogEntry 的字段与单条接口相同。</p>
+
+      <h4>请求示例</h4>
+      <pre><code>{
+  "logs": [
+    {
+      "level": "info",
+      "service": "auth-service",
+      "message": "User login successful",
+      "trace_id": "req-001"
+    },
+    {
+      "level": "warn",
+      "service": "auth-service",
+      "message": "Rate limit approaching",
+      "trace_id": "req-001"
+    },
+    {
+      "level": "error",
+      "service": "db-service",
+      "message": "Query execution failed",
+      "trace_id": "req-002",
+      "metadata": {
+        "query": "SELECT * FROM users WHERE id = ?",
+        "error_code": "SQLITE_BUSY"
+      }
+    }
+  ]
+}</code></pre>
+
+      <h4>成功响应 (201)</h4>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "inserted": 3,
+    "ids": [2, 3, 4]
+  }
+}</code></pre>
+
+      <h4>校验失败示例 (400)</h4>
+      <pre><code>{
+  "success": false,
+  "error": "logs[2]: service is required and must be a string"
+}</code></pre>
+      <blockquote>错误信息中会标注具体是数组中第几条 (从 0 开始) 校验失败。</blockquote>
+
+      <!-- 4. 查询日志列表 -->
+      <h2 id="api-get-logs">4. 查询日志列表</h2>
+      <div class="endpoint">
+        <span class="method-badge get">GET</span>
+        <span class="endpoint-path">/api/logs</span>
+        <span class="tag auth">需认证</span>
+      </div>
+
+      <h4>查询参数</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>默认值</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>level</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>按单个级别过滤: <code>debug</code> / <code>info</code> / <code>warn</code> / <code>error</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>levels</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>按多个级别过滤, 逗号分隔, 如 <code>error,warn</code></td>
+          </tr>
+          <tr>
+            <td><code>service</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>按服务名称精确匹配</td>
+          </tr>
+          <tr>
+            <td><code>trace_id</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>按链路追踪 ID 精确匹配</td>
+          </tr>
+          <tr>
+            <td><code>message</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>消息内容模糊搜索 (包含即匹配)</td>
+          </tr>
+          <tr>
+            <td><code>start_time</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>起始时间 (ISO 8601, 包含边界)</td>
+          </tr>
+          <tr>
+            <td><code>end_time</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>结束时间 (ISO 8601, 包含边界)</td>
+          </tr>
+          <tr>
+            <td><code>limit</code></td>
+            <td>number</td>
+            <td>50</td>
+            <td>每页条数, 范围 1-200</td>
+          </tr>
+          <tr>
+            <td><code>offset</code></td>
+            <td>number</td>
+            <td>0</td>
+            <td>分页偏移量</td>
+          </tr>
+          <tr>
+            <td><code>sort</code></td>
+            <td>string</td>
+            <td><code>timestamp</code></td>
+            <td>排序字段: <code>timestamp</code> 或 <code>created_at</code></td>
+          </tr>
+          <tr>
+            <td><code>order</code></td>
+            <td>string</td>
+            <td><code>desc</code></td>
+            <td>排序方向: <code>asc</code> 或 <code>desc</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <blockquote><code>level</code> 和 <code>levels</code> 可以同时使用, 结果会自动合并去重。</blockquote>
+
+      <h4>请求示例</h4>
+      <pre><code>GET /api/logs?level=error&service=api-gateway&limit=20&offset=0</code></pre>
+
+      <h4>成功响应</h4>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "level": "error",
+        "service": "api-gateway",
+        "message": "Connection timeout to database",
+        "timestamp": "2025-04-30T10:00:00.000Z",
+        "trace_id": "abc-123-def",
+        "metadata": {
+          "host": "db-primary",
+          "port": 5432,
+          "retry_count": 3
+        },
+        "created_at": "2025-04-30T10:00:01.000Z"
+      }
+    ],
+    "total": 42,
+    "limit": 20,
+    "offset": 0,
+    "has_more": true
+  }
+}</code></pre>
+
+      <h4>分页说明</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>字段</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>total</code></td>
+            <td>符合条件的日志总数</td>
+          </tr>
+          <tr>
+            <td><code>limit</code></td>
+            <td>当前页大小</td>
+          </tr>
+          <tr>
+            <td><code>offset</code></td>
+            <td>当前偏移量</td>
+          </tr>
+          <tr>
+            <td><code>has_more</code></td>
+            <td>是否还有更多数据</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>翻页公式: <code>offset += limit</code>, 直到 <code>has_more</code> 为 <code>false</code>。</p>
+
+      <!-- 5. 查询单条 -->
+      <h2 id="api-get-log">5. 查询单条日志</h2>
+      <div class="endpoint">
+        <span class="method-badge get">GET</span>
+        <span class="endpoint-path">/api/logs/:id</span>
+        <span class="tag auth">需认证</span>
+      </div>
+
+      <h4>路径参数</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>id</code></td>
+            <td>number</td>
+            <td>日志 ID (写入时返回)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>成功响应</h4>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "id": 1,
+    "level": "error",
+    "service": "api-gateway",
+    "message": "Connection timeout to database",
+    "timestamp": "2025-04-30T10:00:00.000Z",
+    "trace_id": "abc-123-def",
+    "metadata": {
+      "host": "db-primary",
+      "port": 5432
+    },
+    "created_at": "2025-04-30T10:00:01.000Z"
+  }
+}</code></pre>
+
+      <!-- 6. 删除单条 -->
+      <h2 id="api-delete-log">6. 删除单条日志</h2>
+      <div class="endpoint">
+        <span class="method-badge delete">DELETE</span>
+        <span class="endpoint-path">/api/logs/:id</span>
+        <span class="tag auth">需认证</span>
+      </div>
+
+      <h4>路径参数</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>id</code></td>
+            <td>number</td>
+            <td>日志 ID</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>成功响应</h4>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "deleted": 1
+  }
+}</code></pre>
+      <p><code>deleted</code> 为实际删除的条数 (0 或 1)。</p>
+
+      <!-- 7. 批量删除 -->
+      <h2 id="api-delete-logs">7. 批量删除日志</h2>
+      <div class="endpoint">
+        <span class="method-badge delete">DELETE</span>
+        <span class="endpoint-path">/api/logs</span>
+        <span class="tag auth">需认证</span>
+      </div>
+      <p>按条件批量删除日志, <strong>至少需要提供一个参数</strong>, 以防误操作清空所有数据。</p>
+
+      <h4>查询参数</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>必填</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>service</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否*</span></td>
+            <td>按服务名称删除</td>
+          </tr>
+          <tr>
+            <td><code>before</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否*</span></td>
+            <td>删除该时间之前的日志 (ISO 8601)</td>
+          </tr>
+        </tbody>
+      </table>
+      <blockquote>*两个参数至少提供一个, 可同时使用 (取 AND 条件)。</blockquote>
+
+      <h4>请求示例</h4>
+      <pre><code>DELETE /api/logs?service=api-gateway&before=2025-04-01T00:00:00.000Z</code></pre>
+      <p>含义: 删除 <code>api-gateway</code> 服务在 <code>2025-04-01</code> 之前的所有日志。</p>
+
+      <h4>成功响应</h4>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "deleted": 15
+  }
+}</code></pre>
+
+      <hr>
+
+      <!-- 数据结构 -->
+      <h2 id="data-structures">数据结构</h2>
+
+      <h3>LogEntry (写入时的日志条目)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>字段</th>
+            <th>类型</th>
+            <th>必填</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>service</code></td>
+            <td>string</td>
+            <td><span class="tag required">是</span></td>
+            <td>服务名称, 最长 128 字符</td>
+          </tr>
+          <tr>
+            <td><code>message</code></td>
+            <td>string</td>
+            <td><span class="tag required">是</span></td>
+            <td>日志消息, 最长 65536 字符</td>
+          </tr>
+          <tr>
+            <td><code>level</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否</span></td>
+            <td><code>debug</code> / <code>info</code> / <code>warn</code> / <code>error</code>, 默认
+              <code>info</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>timestamp</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否</span></td>
+            <td>ISO 8601 格式, 默认服务器当前时间</td>
+          </tr>
+          <tr>
+            <td><code>trace_id</code></td>
+            <td>string</td>
+            <td><span class="tag optional">否</span></td>
+            <td>链路追踪 ID, 最长 128 字符</td>
+          </tr>
+          <tr>
+            <td><code>metadata</code></td>
+            <td>object</td>
+            <td><span class="tag optional">否</span></td>
+            <td>JSON 对象, 序列化后最长 65536 字符</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>StoredLog (查询返回的日志条目)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>字段</th>
+            <th>类型</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>id</code></td>
+            <td>number</td>
+            <td>日志唯一 ID</td>
+          </tr>
+          <tr>
+            <td><code>level</code></td>
+            <td>string</td>
+            <td>日志级别</td>
+          </tr>
+          <tr>
+            <td><code>service</code></td>
+            <td>string</td>
+            <td>服务名称</td>
+          </tr>
+          <tr>
+            <td><code>message</code></td>
+            <td>string</td>
+            <td>日志消息</td>
+          </tr>
+          <tr>
+            <td><code>timestamp</code></td>
+            <td>string</td>
+            <td>日志时间 (调用方指定或自动生成)</td>
+          </tr>
+          <tr>
+            <td><code>trace_id</code></td>
+            <td>string | null</td>
+            <td>链路追踪 ID</td>
+          </tr>
+          <tr>
+            <td><code>metadata</code></td>
+            <td>object | null</td>
+            <td>附加元数据</td>
+          </tr>
+          <tr>
+            <td><code>created_at</code></td>
+            <td>string</td>
+            <td>日志入库时间 (服务器生成)</td>
+          </tr>
+        </tbody>
+      </table>
+      <blockquote><code>timestamp</code> 是日志事件发生的时间 (由调用方指定), <code>created_at</code> 是日志写入数据库的时间
+        (服务器自动生成)。两者可能不同。</blockquote>
+
+      <!-- 错误码 -->
+      <h2 id="error-codes">错误码参考</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>状态码</th>
+            <th>含义</th>
+            <th>常见原因</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>400</code></td>
+            <td>请求参数错误</td>
+            <td>缺少必填字段, 字段类型错误, 参数格式无效</td>
+          </tr>
+          <tr>
+            <td><code>401</code></td>
+            <td>未认证</td>
+            <td>未提供 API Key, Key 格式错误, Key 不匹配</td>
+          </tr>
+          <tr>
+            <td><code>404</code></td>
+            <td>资源不存在</td>
+            <td>查询/删除的日志 ID 不存在</td>
+          </tr>
+          <tr>
+            <td><code>413</code></td>
+            <td>请求体过大</td>
+            <td>单条超过 1MB, 批量超过 5MB</td>
+          </tr>
+          <tr>
+            <td><code>415</code></td>
+            <td>Content-Type 错误</td>
+            <td>未设置 <code>application/json</code></td>
+          </tr>
+          <tr>
+            <td><code>429</code></td>
+            <td>请求频率超限</td>
+            <td>超过限流阈值, 参见 <code>Retry-After</code> 响应头</td>
+          </tr>
+          <tr>
+            <td><code>500</code></td>
+            <td>服务器内部错误</td>
+            <td>数据库操作失败等, 可重试</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 最佳实践 -->
+      <h2 id="best-practices">最佳实践</h2>
+
+      <h3>日志写入</h3>
+      <ol>
+        <li><strong>使用批量接口</strong>: 需要写入多条日志时, 优先使用 <code>POST /api/logs/batch</code>, 减少网络开销</li>
+        <li><strong>指定 timestamp</strong>: 建议在写入时明确指定 <code>timestamp</code>, 避免因网络延迟导致时间偏差</li>
+        <li><strong>利用 trace_id</strong>: 为同一请求链路上的日志设置相同的 <code>trace_id</code>, 方便后续关联查询</li>
+        <li><strong>合理使用 metadata</strong>: 将结构化信息放入 <code>metadata</code> (如错误码、耗时、请求参数等), 而非拼入
+          <code>message</code>
+        </li>
+      </ol>
+
+      <h3>日志查询</h3>
+      <ol>
+        <li><strong>缩小查询范围</strong>: 始终指定 <code>start_time</code> / <code>end_time</code>, 减少扫描数据量, 提升查询速度</li>
+        <li><strong>使用 has_more 翻页</strong>: 通过 <code>has_more</code> 字段判断是否继续请求下一页, 而非自行计算</li>
+        <li><strong>按需选择排序字段</strong>: <code>timestamp</code> 按日志事件时间排序, <code>created_at</code> 按入库时间排序</li>
+      </ol>
+
+      <h3>日志清理</h3>
+      <ol>
+        <li><strong>定期清理</strong>: 使用 <code>DELETE /api/logs?before=&lt;date&gt;</code> 定期清理过期日志, 控制 D1 存储用量
+        </li>
+        <li><strong>先查后删</strong>: 不确定数据量时, 可先 <code>GET /api/logs</code> 查看总数, 再执行删除</li>
+      </ol>
+
+      <h3>调用示例 (curl)</h3>
+      <pre><code># 写入单条日志
+curl -X POST https://your-worker.workers.dev/api/logs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-api-key" \
+  -d '{"level":"error","service":"my-app","message":"Something went wrong"}'
+
+# 查询最近错误日志
+curl "https://your-worker.workers.dev/api/logs?level=error&limit=10" \
+  -H "Authorization: Bearer your-api-key"
+
+# 按 trace_id 关联查询
+curl "https://your-worker.workers.dev/api/logs?trace_id=req-001" \
+  -H "Authorization: Bearer your-api-key"
+
+# 清理 30 天前的日志
+curl -X DELETE "https://your-worker.workers.dev/api/logs?before=2025-03-31T00:00:00.000Z" \
+  -H "Authorization: Bearer your-api-key"</code></pre>
+    </main>
+  </div>
+
+  <script>
+    // 侧边栏高亮当前可见的章节
+    const sections = document.querySelectorAll('.content h2[id]')
+    const navLinks = document.querySelectorAll('.sidebar a')
+
+    function updateActiveLink() {
+      let current = ''
+      for (const section of sections) {
+        const rect = section.getBoundingClientRect()
+        if (rect.top <= 120) current = section.id
+      }
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current)
+      })
+    }
+
+    window.addEventListener('scroll', updateActiveLink, { passive: true })
+    updateActiveLink()
+  </script>
+
+</body>
+
+</html>

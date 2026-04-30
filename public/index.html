@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FlareLog</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #0f1117;
@@ -66,7 +73,9 @@
       transition: background 0.2s;
     }
 
-    .config-toggle:hover { background: var(--border); }
+    .config-toggle:hover {
+      background: var(--border);
+    }
 
     .config-panel {
       background: var(--surface);
@@ -77,7 +86,10 @@
       align-items: flex-end;
     }
 
-    .config-panel.open { display: flex; flex-wrap: wrap; }
+    .config-panel.open {
+      display: flex;
+      flex-wrap: wrap;
+    }
 
     .config-panel label {
       font-size: 12px;
@@ -101,7 +113,11 @@
       border-color: var(--accent);
     }
 
-    .main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+    .main {
+      padding: 20px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
 
     .filters {
       display: flex;
@@ -111,7 +127,10 @@
       align-items: flex-end;
     }
 
-    .filter-group { display: flex; flex-direction: column; }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
 
     .filter-group label {
       font-size: 11px;
@@ -138,7 +157,9 @@
       border-color: var(--accent);
     }
 
-    .filter-group input[type="text"] { min-width: 160px; }
+    .filter-group input[type="text"] {
+      min-width: 160px;
+    }
 
     .btn {
       background: var(--accent);
@@ -153,7 +174,9 @@
       white-space: nowrap;
     }
 
-    .btn:hover { background: var(--accent-hover); }
+    .btn:hover {
+      background: var(--accent-hover);
+    }
 
     .btn-secondary {
       background: var(--surface-hover);
@@ -161,7 +184,9 @@
       border: 1px solid var(--border);
     }
 
-    .btn-secondary:hover { background: var(--border); }
+    .btn-secondary:hover {
+      background: var(--border);
+    }
 
     .stats {
       display: flex;
@@ -171,9 +196,16 @@
       color: var(--text-dim);
     }
 
-    .stats span { color: var(--text); font-weight: 500; }
+    .stats span {
+      color: var(--text);
+      font-weight: 500;
+    }
 
-    .log-list { display: flex; flex-direction: column; gap: 6px; }
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
     .log-item {
       background: var(--surface);
@@ -184,7 +216,9 @@
       transition: border-color 0.2s;
     }
 
-    .log-item:hover { border-color: var(--accent); }
+    .log-item:hover {
+      border-color: var(--accent);
+    }
 
     .log-item-header {
       display: flex;
@@ -202,10 +236,25 @@
       letter-spacing: 0.5px;
     }
 
-    .level-badge.error { background: rgba(255,107,107,0.15); color: var(--error); }
-    .level-badge.warn { background: rgba(255,217,61,0.15); color: var(--warn); }
-    .level-badge.info { background: rgba(107,203,119,0.15); color: var(--info); }
-    .level-badge.debug { background: rgba(139,143,163,0.15); color: var(--debug); }
+    .level-badge.error {
+      background: rgba(255, 107, 107, 0.15);
+      color: var(--error);
+    }
+
+    .level-badge.warn {
+      background: rgba(255, 217, 61, 0.15);
+      color: var(--warn);
+    }
+
+    .level-badge.info {
+      background: rgba(107, 203, 119, 0.15);
+      color: var(--info);
+    }
+
+    .level-badge.debug {
+      background: rgba(139, 143, 163, 0.15);
+      color: var(--debug);
+    }
 
     .log-service {
       font-size: 12px;
@@ -235,7 +284,10 @@
       border-top: 1px solid var(--border);
     }
 
-    .log-item.expanded .log-detail { display: block; }
+    .log-item.expanded .log-detail {
+      display: block;
+    }
+
     .log-item.expanded .log-message {
       white-space: pre-wrap;
       word-break: break-all;
@@ -283,7 +335,10 @@
       color: var(--text-dim);
     }
 
-    .pagination .page-info span { color: var(--text); font-weight: 500; }
+    .pagination .page-info span {
+      color: var(--text);
+      font-weight: 500;
+    }
 
     .empty-state {
       text-align: center;
@@ -291,8 +346,14 @@
       color: var(--text-dim);
     }
 
-    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 14px; }
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
 
     .loading {
       text-align: center;
@@ -316,233 +377,254 @@
       transition: opacity 0.3s, transform 0.3s;
     }
 
-    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
     @media (max-width: 768px) {
-      .header { padding: 12px 16px; }
-      .main { padding: 16px; }
-      .filters { gap: 8px; }
+      .header {
+        padding: 12px 16px;
+      }
+
+      .main {
+        padding: 16px;
+      }
+
+      .filters {
+        gap: 8px;
+      }
+
       .filter-group select,
-      .filter-group input { min-width: 100px; }
-      .config-panel input { width: 100%; }
+      .filter-group input {
+        min-width: 100px;
+      }
+
+      .config-panel input {
+        width: 100%;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<div class="header">
-  <div>
-    <h1>FlareLog<span class="version">v0.2.0</span></h1>
-  </div>
-  <button class="config-toggle" onclick="toggleConfig()">Settings</button>
-</div>
-
-<div class="config-panel" id="configPanel">
-  <div>
-    <label for="apiBase">API Base URL</label>
-    <input type="text" id="apiBase" placeholder="https://your-worker.workers.dev">
-  </div>
-  <div>
-    <label for="apiKey">API Key</label>
-    <input type="password" id="apiKey" placeholder="Your API Key">
-  </div>
-  <button class="btn" onclick="saveConfig()">Save</button>
-</div>
-
-<div class="main">
-  <div class="filters">
-    <div class="filter-group">
-      <label>Level</label>
-      <select id="filterLevel">
-        <option value="">All</option>
-        <option value="error">Error</option>
-        <option value="warn">Warn</option>
-        <option value="info">Info</option>
-        <option value="debug">Debug</option>
-      </select>
+  <div class="header">
+    <div>
+      <h1>FlareLog<span class="version">v0.2.0</span></h1>
     </div>
-    <div class="filter-group">
-      <label>Service</label>
-      <input type="text" id="filterService" placeholder="service name">
-    </div>
-    <div class="filter-group">
-      <label>Trace ID</label>
-      <input type="text" id="filterTraceId" placeholder="trace_id">
-    </div>
-    <div class="filter-group">
-      <label>Message</label>
-      <input type="text" id="filterMessage" placeholder="search message...">
-    </div>
-    <div class="filter-group">
-      <label>Start Time</label>
-      <input type="datetime-local" id="filterStartTime">
-    </div>
-    <div class="filter-group">
-      <label>End Time</label>
-      <input type="datetime-local" id="filterEndTime">
-    </div>
-    <button class="btn" onclick="fetchLogs()">Search</button>
-    <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
-  </div>
-
-  <div class="stats" id="stats"></div>
-  <div id="logContainer">
-    <div class="empty-state">
-      <div class="icon">📋</div>
-      <p>Configure your API Base URL and API Key, then search for logs.</p>
+    <div style="display:flex;gap:10px;align-items:center">
+      <a href="/docs" style="font-size:13px;color:var(--text-dim);text-decoration:none">API 文档</a>
+      <button class="config-toggle" onclick="toggleConfig()">Settings</button>
     </div>
   </div>
-  <div class="pagination" id="pagination" style="display:none;"></div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <div class="config-panel" id="configPanel">
+    <div>
+      <label for="apiBase">API Base URL</label>
+      <input type="text" id="apiBase" placeholder="https://your-worker.workers.dev">
+    </div>
+    <div>
+      <label for="apiKey">API Key</label>
+      <input type="password" id="apiKey" placeholder="Your API Key">
+    </div>
+    <button class="btn" onclick="saveConfig()">Save</button>
+  </div>
 
-<script>
-  const PAGE_SIZE = 50
+  <div class="main">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Level</label>
+        <select id="filterLevel">
+          <option value="">All</option>
+          <option value="error">Error</option>
+          <option value="warn">Warn</option>
+          <option value="info">Info</option>
+          <option value="debug">Debug</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Service</label>
+        <input type="text" id="filterService" placeholder="service name">
+      </div>
+      <div class="filter-group">
+        <label>Trace ID</label>
+        <input type="text" id="filterTraceId" placeholder="trace_id">
+      </div>
+      <div class="filter-group">
+        <label>Message</label>
+        <input type="text" id="filterMessage" placeholder="search message...">
+      </div>
+      <div class="filter-group">
+        <label>Start Time</label>
+        <input type="datetime-local" id="filterStartTime">
+      </div>
+      <div class="filter-group">
+        <label>End Time</label>
+        <input type="datetime-local" id="filterEndTime">
+      </div>
+      <button class="btn" onclick="fetchLogs()">Search</button>
+      <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+    </div>
 
-  function getApiBase() {
-    return localStorage.getItem('flarelog_api_base') || ''
-  }
+    <div class="stats" id="stats"></div>
+    <div id="logContainer">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>Configure your API Base URL and API Key, then search for logs.</p>
+      </div>
+    </div>
+    <div class="pagination" id="pagination" style="display:none;"></div>
+  </div>
 
-  function getApiKey() {
-    return localStorage.getItem('flarelog_api_key') || ''
-  }
+  <div class="toast" id="toast"></div>
 
-  function toggleConfig() {
-    const panel = document.getElementById('configPanel')
-    panel.classList.toggle('open')
-  }
+  <script>
+    const PAGE_SIZE = 50
 
-  function saveConfig() {
-    localStorage.setItem('flarelog_api_base', document.getElementById('apiBase').value.replace(/\/+$/, ''))
-    localStorage.setItem('flarelog_api_key', document.getElementById('apiKey').value)
-    showToast('Settings saved')
-  }
-
-  function loadConfig() {
-    document.getElementById('apiBase').value = getApiBase()
-    document.getElementById('apiKey').value = getApiKey()
-  }
-
-  function showToast(msg) {
-    const toast = document.getElementById('toast')
-    toast.textContent = msg
-    toast.classList.add('show')
-    setTimeout(() => toast.classList.remove('show'), 3000)
-  }
-
-  function formatTime(iso) {
-    try {
-      return new Date(iso).toLocaleString()
-    } catch {
-      return iso
-    }
-  }
-
-  function escapeHtml(str) {
-    const div = document.createElement('div')
-    div.textContent = str
-    return div.innerHTML
-  }
-
-  function buildQueryParams(offset) {
-    const params = new URLSearchParams()
-    params.set('limit', PAGE_SIZE)
-    params.set('offset', offset)
-
-    const level = document.getElementById('filterLevel').value
-    if (level) params.set('level', level)
-
-    const service = document.getElementById('filterService').value.trim()
-    if (service) params.set('service', service)
-
-    const traceId = document.getElementById('filterTraceId').value.trim()
-    if (traceId) params.set('trace_id', traceId)
-
-    const message = document.getElementById('filterMessage').value.trim()
-    if (message) params.set('message', message)
-
-    const startTime = document.getElementById('filterStartTime').value
-    if (startTime) params.set('start_time', new Date(startTime).toISOString())
-
-    const endTime = document.getElementById('filterEndTime').value
-    if (endTime) params.set('end_time', new Date(endTime).toISOString())
-
-    return params
-  }
-
-  let currentOffset = 0
-  let currentTotal = 0
-
-  async function fetchLogs(offset = 0) {
-    const base = getApiBase()
-    const key = getApiKey()
-
-    if (!base || !key) {
-      showToast('Please configure API Base URL and API Key first')
-      document.getElementById('configPanel').classList.add('open')
-      return
+    function getApiBase() {
+      return localStorage.getItem('flarelog_api_base') || ''
     }
 
-    currentOffset = offset
-    const container = document.getElementById('logContainer')
-    container.innerHTML = '<div class="loading">Loading...</div>'
+    function getApiKey() {
+      return localStorage.getItem('flarelog_api_key') || ''
+    }
 
-    const params = buildQueryParams(offset)
+    function toggleConfig() {
+      const panel = document.getElementById('configPanel')
+      panel.classList.toggle('open')
+    }
 
-    try {
-      const res = await fetch(`${base}/api/logs?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Accept': 'application/json',
-        },
-      })
+    function saveConfig() {
+      localStorage.setItem('flarelog_api_base', document.getElementById('apiBase').value.replace(/\/+$/, ''))
+      localStorage.setItem('flarelog_api_key', document.getElementById('apiKey').value)
+      showToast('Settings saved')
+    }
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }))
-        throw new Error(err.error || `HTTP ${res.status}`)
+    function loadConfig() {
+      document.getElementById('apiBase').value = getApiBase()
+      document.getElementById('apiKey').value = getApiKey()
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast')
+      toast.textContent = msg
+      toast.classList.add('show')
+      setTimeout(() => toast.classList.remove('show'), 3000)
+    }
+
+    function formatTime(iso) {
+      try {
+        return new Date(iso).toLocaleString()
+      } catch {
+        return iso
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div')
+      div.textContent = str
+      return div.innerHTML
+    }
+
+    function buildQueryParams(offset) {
+      const params = new URLSearchParams()
+      params.set('limit', PAGE_SIZE)
+      params.set('offset', offset)
+
+      const level = document.getElementById('filterLevel').value
+      if (level) params.set('level', level)
+
+      const service = document.getElementById('filterService').value.trim()
+      if (service) params.set('service', service)
+
+      const traceId = document.getElementById('filterTraceId').value.trim()
+      if (traceId) params.set('trace_id', traceId)
+
+      const message = document.getElementById('filterMessage').value.trim()
+      if (message) params.set('message', message)
+
+      const startTime = document.getElementById('filterStartTime').value
+      if (startTime) params.set('start_time', new Date(startTime).toISOString())
+
+      const endTime = document.getElementById('filterEndTime').value
+      if (endTime) params.set('end_time', new Date(endTime).toISOString())
+
+      return params
+    }
+
+    let currentOffset = 0
+    let currentTotal = 0
+
+    async function fetchLogs(offset = 0) {
+      const base = getApiBase()
+      const key = getApiKey()
+
+      if (!base || !key) {
+        showToast('Please configure API Base URL and API Key first')
+        document.getElementById('configPanel').classList.add('open')
+        return
       }
 
-      const json = await res.json()
+      currentOffset = offset
+      const container = document.getElementById('logContainer')
+      container.innerHTML = '<div class="loading">Loading...</div>'
 
-      if (!json.success || !json.data) {
-        throw new Error(json.error || 'Unknown error')
+      const params = buildQueryParams(offset)
+
+      try {
+        const res = await fetch(`${base}/api/logs?${params.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Accept': 'application/json',
+          },
+        })
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: res.statusText }))
+          throw new Error(err.error || `HTTP ${res.status}`)
+        }
+
+        const json = await res.json()
+
+        if (!json.success || !json.data) {
+          throw new Error(json.error || 'Unknown error')
+        }
+
+        const { data, total, limit, offset: respOffset, has_more } = json.data
+        currentTotal = total
+
+        renderStats(total, respOffset, data.length)
+        renderLogs(data)
+        renderPagination(total, respOffset, has_more)
+      } catch (err) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>${escapeHtml(err.message)}</p></div>`
+        document.getElementById('stats').innerHTML = ''
+        document.getElementById('pagination').style.display = 'none'
+      }
+    }
+
+    function renderStats(total, offset, count) {
+      const from = total === 0 ? 0 : offset + 1
+      const to = offset + count
+      document.getElementById('stats').innerHTML =
+        `Total: <span>${total}</span> &nbsp;|&nbsp; Showing: <span>${from}-${to}</span>`
+    }
+
+    function renderLogs(logs) {
+      const container = document.getElementById('logContainer')
+
+      if (logs.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No logs found.</p></div>'
+        return
       }
 
-      const { data, total, limit, offset: respOffset, has_more } = json.data
-      currentTotal = total
+      container.innerHTML = '<div class="log-list">' + logs.map(log => {
+        const metadataHtml = log.metadata
+          ? `<div class="detail-row"><div class="detail-key">Metadata</div></div><div class="detail-value metadata">${escapeHtml(JSON.stringify(log.metadata, null, 2))}</div>`
+          : ''
 
-      renderStats(total, respOffset, data.length)
-      renderLogs(data)
-      renderPagination(total, respOffset, has_more)
-    } catch (err) {
-      container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>${escapeHtml(err.message)}</p></div>`
-      document.getElementById('stats').innerHTML = ''
-      document.getElementById('pagination').style.display = 'none'
-    }
-  }
-
-  function renderStats(total, offset, count) {
-    const from = total === 0 ? 0 : offset + 1
-    const to = offset + count
-    document.getElementById('stats').innerHTML =
-      `Total: <span>${total}</span> &nbsp;|&nbsp; Showing: <span>${from}-${to}</span>`
-  }
-
-  function renderLogs(logs) {
-    const container = document.getElementById('logContainer')
-
-    if (logs.length === 0) {
-      container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No logs found.</p></div>'
-      return
-    }
-
-    container.innerHTML = '<div class="log-list">' + logs.map(log => {
-      const metadataHtml = log.metadata
-        ? `<div class="detail-row"><div class="detail-key">Metadata</div></div><div class="detail-value metadata">${escapeHtml(JSON.stringify(log.metadata, null, 2))}</div>`
-        : ''
-
-      return `
+        return `
         <div class="log-item" onclick="this.classList.toggle('expanded')">
           <div class="log-item-header">
             <span class="level-badge ${log.level}">${escapeHtml(log.level)}</span>
@@ -577,47 +659,48 @@
           </div>
         </div>
       `
-    }).join('') + '</div>'
-  }
-
-  function renderPagination(total, offset, hasMore) {
-    const pagination = document.getElementById('pagination')
-    if (total === 0) {
-      pagination.style.display = 'none'
-      return
+      }).join('') + '</div>'
     }
 
-    pagination.style.display = 'flex'
-    const currentPage = Math.floor(offset / PAGE_SIZE) + 1
-    const totalPages = Math.ceil(total / PAGE_SIZE)
+    function renderPagination(total, offset, hasMore) {
+      const pagination = document.getElementById('pagination')
+      if (total === 0) {
+        pagination.style.display = 'none'
+        return
+      }
 
-    pagination.innerHTML = `
+      pagination.style.display = 'flex'
+      const currentPage = Math.floor(offset / PAGE_SIZE) + 1
+      const totalPages = Math.ceil(total / PAGE_SIZE)
+
+      pagination.innerHTML = `
       <button class="btn btn-secondary" ${offset === 0 ? 'disabled' : ''} onclick="fetchLogs(0)">First</button>
       <button class="btn btn-secondary" ${offset === 0 ? 'disabled' : ''} onclick="fetchLogs(${offset - PAGE_SIZE})">Prev</button>
       <span class="page-info">Page <span>${currentPage}</span> / <span>${totalPages}</span></span>
       <button class="btn btn-secondary" ${!hasMore ? 'disabled' : ''} onclick="fetchLogs(${offset + PAGE_SIZE})">Next</button>
       <button class="btn btn-secondary" ${!hasMore ? 'disabled' : ''} onclick="fetchLogs(${(totalPages - 1) * PAGE_SIZE})">Last</button>
     `
-  }
+    }
 
-  function resetFilters() {
-    document.getElementById('filterLevel').value = ''
-    document.getElementById('filterService').value = ''
-    document.getElementById('filterTraceId').value = ''
-    document.getElementById('filterMessage').value = ''
-    document.getElementById('filterStartTime').value = ''
-    document.getElementById('filterEndTime').value = ''
-  }
+    function resetFilters() {
+      document.getElementById('filterLevel').value = ''
+      document.getElementById('filterService').value = ''
+      document.getElementById('filterTraceId').value = ''
+      document.getElementById('filterMessage').value = ''
+      document.getElementById('filterStartTime').value = ''
+      document.getElementById('filterEndTime').value = ''
+    }
 
-  // 回车键触发搜索
-  document.querySelectorAll('.filters input').forEach(input => {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') fetchLogs()
+    // 回车键触发搜索
+    document.querySelectorAll('.filters input').forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') fetchLogs()
+      })
     })
-  })
 
-  loadConfig()
-</script>
+    loadConfig()
+  </script>
 
 </body>
+
 </html>
