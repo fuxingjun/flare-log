@@ -53,8 +53,8 @@ app.notFound((c) => {
 /**
  * 全局错误处理
  * - HTTPException: Hono 框架抛出的 HTTP 异常, 保留其状态码和消息
- * - TypeError: 通常是请求体解析失败, 返回 400
- * - 其它异常: 记录日志后返回 500, 不暴露内部细节
+ * - TypeError: 通常是请求体解析失败或绑定缺失, 返回 400 或 500
+ * - 其它异常: 记录日志后返回 500, 开发环境下附带错误信息
  */
 app.onError((err, c) => {
   if (err instanceof Error && 'status' in err) {
@@ -65,7 +65,16 @@ app.onError((err, c) => {
     }
   }
 
+  // TypeError 可能是 D1 绑定缺失 (Cannot read properties of undefined)
   if (err instanceof TypeError) {
+    const msg = err.message
+    if (msg.includes('undefined') || msg.includes('null')) {
+      console.error('Binding error (likely missing D1 or env var):', err)
+      return c.json(
+        { success: false, error: 'Server configuration error - check D1 binding and environment variables' },
+        500,
+      )
+    }
     return c.json({ success: false, error: 'Invalid request' }, 400)
   }
 
