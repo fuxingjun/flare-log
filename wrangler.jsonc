@@ -1,10 +1,11 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "flare-log",
   "compatibility_date": "2025-08-03",
   "main": "./src/index.ts",
   "assets": {
     "not_found_handling": "single-page-application"
   },
-  "keep_vars": true
+  // 部署时保留 Dashboard 中手动配置的变量和绑定, 避免被覆盖
+  "keep_vars": true,
+  "keep_bindings": true
 }

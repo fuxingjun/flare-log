@@ -52,6 +52,8 @@ export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
+  /** 错误详情, 提供更多调试信息 */
+  detail?: string
 }
 
 /** Cloudflare Workers 环境变量绑定, 部署时在 Cloudflare Dashboard 中配置 */

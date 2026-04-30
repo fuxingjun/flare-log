@@ -133,7 +133,7 @@ app.get('/', async (c) => {
   } catch (err) {
     console.error('Query error:', err)
     return c.json<ApiResponse>(
-      { success: false, error: 'Failed to query logs' },
+      { success: false, error: 'Failed to query logs', detail: err instanceof Error ? err.message : undefined },
       500,
     )
   }
@@ -144,7 +144,7 @@ app.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id) || id <= 0) {
-    return c.json<ApiResponse>({ success: false, error: 'Invalid log id' }, 400)
+    return c.json<ApiResponse>({ success: false, error: 'Invalid log id', detail: `Received: ${c.req.param('id')}` }, 400)
   }
 
   try {
@@ -160,7 +160,7 @@ app.get('/:id', async (c) => {
   } catch (err) {
     console.error('Query by ID error:', err)
     return c.json<ApiResponse>(
-      { success: false, error: 'Failed to query log' },
+      { success: false, error: 'Failed to query log', detail: err instanceof Error ? err.message : undefined },
       500,
     )
   }

@@ -11,7 +11,7 @@ app.delete('/:id', async (c) => {
   const id = Number(c.req.param('id'))
 
   if (isNaN(id) || id <= 0) {
-    return c.json<ApiResponse>({ success: false, error: 'Invalid log id' }, 400)
+    return c.json<ApiResponse>({ success: false, error: 'Invalid log id', detail: `Received: ${c.req.param('id')}` }, 400)
   }
 
   try {
@@ -28,7 +28,7 @@ app.delete('/:id', async (c) => {
     )
   } catch (err) {
     console.error('Delete error:', err)
-    return c.json<ApiResponse>({ success: false, error: 'Failed to delete log' }, 500)
+    return c.json<ApiResponse>({ success: false, error: 'Failed to delete log', detail: err instanceof Error ? err.message : undefined }, 500)
   }
 })
 
@@ -45,7 +45,7 @@ app.delete('/', async (c) => {
 
   if (!service && !before) {
     return c.json<ApiResponse>(
-      { success: false, error: 'At least one of service or before is required' },
+      { success: false, error: 'At least one of service or before is required', detail: 'Provide ?service=<name> and/or ?before=<ISO8601> to specify which logs to delete.' },
       400,
     )
   }
@@ -53,7 +53,7 @@ app.delete('/', async (c) => {
   // 校验 before 参数格式
   if (before && isNaN(Date.parse(before))) {
     return c.json<ApiResponse>(
-      { success: false, error: 'before must be a valid ISO 8601 date string' },
+      { success: false, error: 'before must be a valid ISO 8601 date string', detail: `Received: ${before}` },
       400,
     )
   }
@@ -85,7 +85,7 @@ app.delete('/', async (c) => {
   } catch (err) {
     console.error('Batch delete error:', err)
     return c.json<ApiResponse>(
-      { success: false, error: 'Failed to delete logs' },
+      { success: false, error: 'Failed to delete logs', detail: err instanceof Error ? err.message : undefined },
       500,
     )
   }

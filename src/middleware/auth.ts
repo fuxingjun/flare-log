@@ -11,7 +11,11 @@ export const auth = createMiddleware<{ Bindings: Env }>(async (c, next) => {
 
   if (!apiKey) {
     return c.json(
-      { success: false, error: 'API_KEY not configured. Please add API_KEY in Worker Settings > Environment Variables.' },
+      {
+        success: false,
+        error: 'API_KEY not configured',
+        detail: 'Please add API_KEY in Cloudflare Dashboard > Worker Settings > Environment Variables.',
+      },
       500,
     )
   }
@@ -21,15 +25,36 @@ export const auth = createMiddleware<{ Bindings: Env }>(async (c, next) => {
   const xApiKey = c.req.header('X-API-Key')
 
   let providedKey: string | undefined
+  let authMethod = ''
 
   if (authHeader?.startsWith('Bearer ')) {
     providedKey = authHeader.slice(7)
+    authMethod = 'Authorization: Bearer'
   } else if (xApiKey) {
     providedKey = xApiKey
+    authMethod = 'X-API-Key'
   }
 
-  if (!providedKey || providedKey !== apiKey) {
-    return c.json({ success: false, error: 'Unauthorized' }, 401)
+  if (!providedKey) {
+    return c.json(
+      {
+        success: false,
+        error: 'Unauthorized: missing authentication',
+        detail: 'Provide API key via Authorization: Bearer <key> or X-API-Key: <key> header.',
+      },
+      401,
+    )
+  }
+
+  if (providedKey !== apiKey) {
+    return c.json(
+      {
+        success: false,
+        error: 'Unauthorized: invalid API key',
+        detail: `The key provided via ${authMethod} does not match the configured API_KEY.`,
+      },
+      401,
+    )
   }
 
   await next()

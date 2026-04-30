@@ -30,7 +30,7 @@ async function safeParseJson<T>(c: import('hono').Context<{ Bindings: Env }>, ma
   const contentType = c.req.header('Content-Type')
   if (!contentType?.includes('application/json')) {
     return c.json<ApiResponse>(
-      { success: false, error: 'Content-Type must be application/json' },
+      { success: false, error: 'Content-Type must be application/json', detail: `Received: ${contentType || '(none)'}` },
       415,
     )
   }
@@ -38,16 +38,16 @@ async function safeParseJson<T>(c: import('hono').Context<{ Bindings: Env }>, ma
   const contentLength = c.req.header('Content-Length')
   if (contentLength && Number(contentLength) > maxSize) {
     return c.json<ApiResponse>(
-      { success: false, error: 'Request body too large' },
+      { success: false, error: 'Request body too large', detail: `Max size: ${maxSize} bytes, received: ${contentLength} bytes` },
       413,
     )
   }
 
   try {
     return await c.req.json<T>()
-  } catch {
+  } catch (parseErr) {
     return c.json<ApiResponse>(
-      { success: false, error: 'Invalid JSON in request body' },
+      { success: false, error: 'Invalid JSON in request body', detail: parseErr instanceof Error ? parseErr.message : undefined },
       400,
     )
   }
@@ -121,7 +121,10 @@ app.post('/', async (c) => {
     .run()
 
   if (!result.success) {
-    return c.json<ApiResponse>({ success: false, error: 'Failed to insert log' }, 500)
+    return c.json<ApiResponse>(
+      { success: false, error: 'Failed to insert log', detail: `D1 insert returned success=false for service="${log.service}"` },
+      500,
+    )
   }
 
   return c.json<ApiResponse<{ id: number }>>(

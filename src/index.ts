@@ -22,7 +22,11 @@ app.use('*', logger())
 app.use('*', async (c, next) => {
   if (!c.env.DB) {
     return c.json(
-      { success: false, error: 'D1 database not bound. Please add a D1 binding named "DB" in Worker Settings > Bindings.' },
+      {
+        success: false,
+        error: 'D1 database not bound',
+        detail: 'Please add a D1 binding named "DB" in Cloudflare Dashboard > Worker Settings > Bindings.',
+      },
       500,
     )
   }
@@ -54,7 +58,7 @@ app.route('/api/logs', query)
 app.route('/api/logs', manage)
 
 app.notFound((c) => {
-  return c.json({ success: false, error: 'Not Found' }, 404)
+  return c.json({ success: false, error: 'Not Found', detail: `${c.req.method} ${c.req.path} does not exist` }, 404)
 })
 
 /**
@@ -74,11 +78,11 @@ app.onError((err, c) => {
   }
 
   if (err instanceof TypeError) {
-    return c.json({ success: false, error: 'Invalid request' }, 400)
+    return c.json({ success: false, error: 'Invalid request', detail: err.message }, 400)
   }
 
   console.error('Unhandled error:', err)
-  return c.json({ success: false, error: 'Internal Server Error' }, 500)
+  return c.json({ success: false, error: 'Internal Server Error', detail: err instanceof Error ? err.message : undefined }, 500)
 })
 
 export default app
