@@ -1,73 +1,77 @@
 # FlareLog
 
-Lightweight log service on Cloudflare Workers + D1.
+轻量级 Cloudflare Workers + D1 日志接收与查询服务。
 
-## Quick Start
+## 特性
 
-```txt
+- 结构化 JSON 日志接收 (单条 / 批量)
+- 按时间、level、service、trace_id 等多维度过滤查询
+- 内置 Web UI 日志查看器 + API 文档页面
+- API Key 认证 + IP 限流
+- 数据库自动初始化, 零配置部署
+- 极致轻量, 适合个人项目与中小型应用
+
+## 快速开始
+
+```bash
 npm install
 npm run dev
 ```
 
-## Deploy
+## 部署
 
-```txt
+```bash
 npm run deploy
 ```
 
-## Cloudflare Configuration
+部署时无需修改任何代码, 只需在 Cloudflare Dashboard 中完成以下配置:
 
-1. Create a D1 database
-2. Bind D1 database in Worker Settings > Bindings, variable name: `DB`
-3. Add `API_KEY` environment variable in Worker Settings > Environment Variables
+1. 创建 D1 数据库
+2. 在 Worker 的 Settings > Bindings 中绑定 D1 数据库, 变量名设为 `DB`
+3. 在 Worker 的 Settings > Environment Variables 中添加 `API_KEY` 环境变量
 
-Database tables and indexes are automatically created on the first request. No manual SQL execution needed.
+数据库表和索引会在首次请求时自动创建, 无需手动执行 SQL。
 
-## API
+## API 概览
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| `GET` | `/` | Service info | No |
-| `POST` | `/api/logs` | Ingest single log | Yes |
-| `POST` | `/api/logs/batch` | Batch ingest logs (≤100) | Yes |
-| `GET` | `/api/logs` | Query logs (filter + pagination) | Yes |
-| `GET` | `/api/logs/:id` | Get single log | Yes |
-| `DELETE` | `/api/logs/:id` | Delete single log | Yes |
-| `DELETE` | `/api/logs` | Batch delete logs (by service/before) | Yes |
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| `GET` | `/` | 服务信息 | 否 |
+| `POST` | `/api/logs` | 接收单条日志 | 是 |
+| `POST` | `/api/logs/batch` | 批量接收日志 (≤100条) | 是 |
+| `GET` | `/api/logs` | 查询日志 (过滤 + 分页 + 排序) | 是 |
+| `GET` | `/api/logs/:id` | 查询单条日志 | 是 |
+| `DELETE` | `/api/logs/:id` | 删除单条日志 | 是 |
+| `DELETE` | `/api/logs` | 批量清理日志 (按 service/before) | 是 |
 
-Auth: `Authorization: Bearer <key>` or `X-API-Key: <key>`
+认证方式: `Authorization: Bearer <key>` 或 `X-API-Key: <key>`
 
-### Query Parameters (GET /api/logs)
+> 完整的接口文档 (请求/响应示例、参数约束、错误码、最佳实践等) 请参阅 [API.md](docs/API.md) 或访问 `/docs` 页面。
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `level` | string | Filter by single level (debug/info/warn/error) |
-| `levels` | string | Filter by multiple levels, comma-separated (e.g. "error,warn") |
-| `service` | string | Filter by service name |
-| `trace_id` | string | Filter by trace ID |
-| `message` | string | Fuzzy search in message |
-| `start_time` | string | Start time (ISO 8601) |
-| `end_time` | string | End time (ISO 8601) |
-| `limit` | number | Page size (1-200, default 50) |
-| `offset` | number | Pagination offset (default 0) |
-| `sort` | string | Sort field: timestamp or created_at (default timestamp) |
-| `order` | string | Sort direction: asc or desc (default desc) |
+## 数据库表结构
 
-### Batch Delete Parameters (DELETE /api/logs)
+```sql
+CREATE TABLE logs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  level      TEXT NOT NULL DEFAULT 'info',
+  service    TEXT NOT NULL,
+  message    TEXT NOT NULL,
+  trace_id   TEXT,
+  metadata   TEXT,          -- JSON 字符串
+  timestamp  TEXT NOT NULL, -- 日志时间 (由调用方指定或自动生成)
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))  -- 入库时间
+);
+```
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `service` | string | Delete logs by service name |
-| `before` | string | Delete logs before this time (ISO 8601) |
-
-At least one parameter is required to prevent accidental deletion of all logs.
+已建索引: `timestamp`, `level`, `service`, `trace_id`, 以及 `(service, level)`, `(service, timestamp)`, `(level, timestamp)`, `(trace_id, timestamp)`, `(service, level, timestamp)` 等复合索引。
 
 ## Web UI
 
-Access the root URL of your Worker to use the built-in log viewer. Configure the API Base URL and API Key in the Settings panel.
+- **日志查看器**: 访问 Worker 根 URL, 在 Settings 面板配置 API Base URL 和 API Key 后即可查询日志
+- **API 文档**: 访问 `/docs` 查看交互式 API 文档
 
-## Type Generation
+## 类型生成
 
-```txt
+```bash
 npm run cf-typegen
 ```

@@ -1,0 +1,300 @@
+### FlareLog API 接口测试
+### 使用前请先配置 @baseUrl 和 @apiKey 变量
+### VS Code 推荐安装 REST Client 插件, JetBrains IDE 原生支持
+
+@baseUrl = http://localhost:5173
+@apiKey = your-api-key-here
+
+### ============================================================
+### 服务信息 (无需认证)
+### ============================================================
+
+### 获取服务信息
+GET {{baseUrl}}/
+
+### ============================================================
+### 日志写入
+### ============================================================
+
+### 接收单条日志 - 最简写法 (只填必填字段)
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "service": "test-service",
+  "message": "Hello from FlareLog"
+}
+
+### 接收单条日志 - 完整字段
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "level": "error",
+  "service": "api-gateway",
+  "message": "Connection timeout to database",
+  "timestamp": "2025-04-30T10:00:00.000Z",
+  "trace_id": "trace-abc-123",
+  "metadata": {
+    "host": "db-primary",
+    "port": 5432,
+    "retry_count": 3
+  }
+}
+
+### 接收单条日志 - 使用 X-API-Key 认证
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "level": "warn",
+  "service": "auth-service",
+  "message": "Rate limit approaching for user"
+}
+
+### 接收单条日志 - debug 级别
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "level": "debug",
+  "service": "worker-pool",
+  "message": "Worker spawned, idle connections: 12",
+  "trace_id": "req-004"
+}
+
+### 接收单条日志 - 带 metadata
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "level": "info",
+  "service": "payment-service",
+  "message": "Order created successfully",
+  "metadata": {
+    "order_id": "ORD-20250430-001",
+    "amount": 99.9,
+    "currency": "CNY"
+  }
+}
+
+### 批量接收日志
+POST {{baseUrl}}/api/logs/batch
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "logs": [
+    {
+      "level": "info",
+      "service": "auth-service",
+      "message": "User login successful",
+      "trace_id": "req-001"
+    },
+    {
+      "level": "warn",
+      "service": "auth-service",
+      "message": "Rate limit approaching",
+      "trace_id": "req-001"
+    },
+    {
+      "level": "error",
+      "service": "db-service",
+      "message": "Query execution failed",
+      "trace_id": "req-002",
+      "metadata": {
+        "query": "SELECT * FROM users WHERE id = ?",
+        "error_code": "SQLITE_BUSY"
+      }
+    }
+  ]
+}
+
+### ============================================================
+### 日志查询
+### ============================================================
+
+### 查询所有日志 (默认: 每页50条, 按 timestamp 降序)
+GET {{baseUrl}}/api/logs
+Authorization: Bearer {{apiKey}}
+
+### 按 level 过滤
+GET {{baseUrl}}/api/logs?level=error
+Authorization: Bearer {{apiKey}}
+
+### 按 levels 多选过滤 (逗号分隔)
+GET {{baseUrl}}/api/logs?levels=error,warn
+Authorization: Bearer {{apiKey}}
+
+### 按 service 过滤
+GET {{baseUrl}}/api/logs?service=api-gateway
+Authorization: Bearer {{apiKey}}
+
+### 按 trace_id 过滤
+GET {{baseUrl}}/api/logs?trace_id=trace-abc-123
+Authorization: Bearer {{apiKey}}
+
+### 按 message 模糊搜索
+GET {{baseUrl}}/api/logs?message=timeout
+Authorization: Bearer {{apiKey}}
+
+### 按时间范围过滤
+GET {{baseUrl}}/api/logs?start_time=2025-04-30T00:00:00.000Z&end_time=2025-04-30T23:59:59.999Z
+Authorization: Bearer {{apiKey}}
+
+### 自定义分页 (每页10条, 偏移20)
+GET {{baseUrl}}/api/logs?limit=10&offset=20
+Authorization: Bearer {{apiKey}}
+
+### 按 created_at 升序排序
+GET {{baseUrl}}/api/logs?sort=created_at&order=asc
+Authorization: Bearer {{apiKey}}
+
+### 复合查询: level + service + 时间范围 + 分页
+GET {{baseUrl}}/api/logs?level=error&service=api-gateway&start_time=2025-04-01T00:00:00.000Z&limit=20&offset=0
+Authorization: Bearer {{apiKey}}
+
+### 根据 ID 查询单条日志
+GET {{baseUrl}}/api/logs/1
+Authorization: Bearer {{apiKey}}
+
+### ============================================================
+### 日志删除
+### ============================================================
+
+### 删除单条日志
+DELETE {{baseUrl}}/api/logs/1
+Authorization: Bearer {{apiKey}}
+
+### 按 service 批量删除
+DELETE {{baseUrl}}/api/logs?service=test-service
+Authorization: Bearer {{apiKey}}
+
+### 按时间范围批量删除 (删除指定时间之前的日志)
+DELETE {{baseUrl}}/api/logs?before=2025-04-01T00:00:00.000Z
+Authorization: Bearer {{apiKey}}
+
+### 按 service + 时间范围批量删除 (AND 条件)
+DELETE {{baseUrl}}/api/logs?service=api-gateway&before=2025-04-30T00:00:00.000Z
+Authorization: Bearer {{apiKey}}
+
+### ============================================================
+### 错误场景测试
+### ============================================================
+
+### 无认证 - 应返回 401
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+
+{
+  "service": "test",
+  "message": "This should fail"
+}
+
+### 错误的 API Key - 应返回 401
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer wrong-key
+
+{
+  "service": "test",
+  "message": "This should fail"
+}
+
+### 缺少必填字段 service - 应返回 400
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "message": "Missing service field"
+}
+
+### 缺少必填字段 message - 应返回 400
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "service": "test-service"
+}
+
+### 无效的 level - 应降级为 info 而非报错 (level 不合法时自动降级)
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "level": "critical",
+  "service": "test-service",
+  "message": "Invalid level will be downgraded to info"
+}
+
+### 无效的 timestamp - 应返回 400
+POST {{baseUrl}}/api/logs
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "service": "test-service",
+  "message": "Bad timestamp",
+  "timestamp": "not-a-date"
+}
+
+### 空的批量日志数组 - 应返回 400
+POST {{baseUrl}}/api/logs/batch
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "logs": []
+}
+
+### 批量日志中某条校验失败 - 应返回 400 并指出索引
+POST {{baseUrl}}/api/logs/batch
+Content-Type: application/json
+Authorization: Bearer {{apiKey}}
+
+{
+  "logs": [
+    {
+      "service": "ok-service",
+      "message": "This one is fine"
+    },
+    {
+      "message": "Missing service in this entry"
+    }
+  ]
+}
+
+### 批量删除不提供参数 - 应返回 400
+DELETE {{baseUrl}}/api/logs
+Authorization: Bearer {{apiKey}}
+
+### 查询不存在的日志 ID - 应返回 404
+GET {{baseUrl}}/api/logs/999999
+Authorization: Bearer {{apiKey}}
+
+### 删除不存在的日志 ID - 应返回 404
+DELETE {{baseUrl}}/api/logs/999999
+Authorization: Bearer {{apiKey}}
+
+### 查询时传入无效 level - 应返回 400
+GET {{baseUrl}}/api/logs?level=unknown
+Authorization: Bearer {{apiKey}}
+
+### 查询时传入无效 sort 字段 - 应返回 400
+GET {{baseUrl}}/api/logs?sort=invalid_field
+Authorization: Bearer {{apiKey}}
+
+### 非 JSON Content-Type - 应返回 415
+POST {{baseUrl}}/api/logs
+Content-Type: text/plain
+Authorization: Bearer {{apiKey}}
+
+this is not json
