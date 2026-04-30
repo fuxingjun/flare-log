@@ -514,6 +514,18 @@
       document.getElementById('apiKey').value = getApiKey()
     }
 
+    function saveFilters() {
+      localStorage.setItem('flarelog_filter_level', document.getElementById('filterLevel').value)
+      localStorage.setItem('flarelog_filter_service', document.getElementById('filterService').value)
+    }
+
+    function loadFilters() {
+      const level = localStorage.getItem('flarelog_filter_level')
+      if (level) document.getElementById('filterLevel').value = level
+      const service = localStorage.getItem('flarelog_filter_service')
+      if (service) document.getElementById('filterService').value = service
+    }
+
     function showToast(msg) {
       const toast = document.getElementById('toast')
       toast.textContent = msg
@@ -578,6 +590,7 @@
       const container = document.getElementById('logContainer')
       container.innerHTML = '<div class="loading">Loading...</div>'
 
+      saveFilters()
       const params = buildQueryParams(offset)
 
       try {
@@ -698,6 +711,8 @@
       document.getElementById('filterMessage').value = ''
       document.getElementById('filterStartTime').value = ''
       document.getElementById('filterEndTime').value = ''
+      localStorage.removeItem('flarelog_filter_level')
+      localStorage.removeItem('flarelog_filter_service')
     }
 
     async function loadServices() {
@@ -717,7 +732,7 @@
         if (!json.success || !json.data) return
 
         const select = document.getElementById('filterService')
-        const current = select.value
+        const current = select.value || localStorage.getItem('flarelog_filter_service') || ''
         select.innerHTML = '<option value="">All</option>'
         json.data.forEach(s => {
           const opt = document.createElement('option')
@@ -741,7 +756,10 @@
     })
 
     loadConfig()
-    loadServices()
+    loadFilters()
+    if (getApiKey()) {
+      loadServices().then(() => fetchLogs())
+    }
   </script>
 
 </body>
