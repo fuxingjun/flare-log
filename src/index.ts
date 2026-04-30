@@ -61,9 +61,9 @@ app.get('/api', (c) => {
   })
 })
 
-/** API 文档页面, 重定向到静态 HTML 文件, 无需认证 */
-app.get('/docs', (c) => {
-  return c.redirect('/docs.html')
+/** API 文档页面, 直接通过静态资源服务提供, 无需认证 */
+app.get('/docs', async (c) => {
+  return c.env.ASSETS.fetch(new Request(new URL('/docs.html', c.req.url)))
 })
 
 app.route('/api/logs', ingest)
@@ -75,12 +75,19 @@ app.route('/api/logs', manage)
  * 在 run_worker_first 模式下, Worker 优先处理所有请求,
  * 非API路径需要通过 env.ASSETS.fetch() 转发到静态资源层,
  * 否则静态文件 (如 index.html) 会返回 404
+ *
+ * SPA fallback: 当静态资源返回 404 时, 尝试返回 index.html,
+ * 以支持前端 SPA 的客户端路由
  */
 app.notFound(async (c) => {
   if (c.req.path.startsWith('/api')) {
     return c.json({ success: false, error: 'Not Found', detail: `${c.req.method} ${c.req.path} does not exist` }, 404)
   }
-  return c.env.ASSETS.fetch(c.req.raw)
+  const res = await c.env.ASSETS.fetch(c.req.raw)
+  if (res.status !== 404) {
+    return res
+  }
+  return c.env.ASSETS.fetch(new Request(new URL('/', c.req.url)))
 })
 
 /**
