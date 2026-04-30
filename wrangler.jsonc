@@ -1,0 +1,19 @@
+{
+  "name": "flare-log",
+  "compatibility_date": "2025-08-03",
+  "main": "./src/index.ts",
+  // 静态资源配置, Worker 优先处理所有请求, 未匹配的再走静态资源
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  // 部署时保留 Dashboard 中手动配置的环境变量, 避免被覆盖
+  "keep_vars": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "c1257dc9-2d80-4f4c-ac4b-b608f7f408d6"
+    }
+  ]
+}

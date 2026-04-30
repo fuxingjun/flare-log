@@ -2,8 +2,8 @@
 ### 使用前请先配置 @baseUrl 和 @apiKey 变量
 ### VS Code 推荐安装 REST Client 插件, JetBrains IDE 原生支持
 
-@baseUrl = http://localhost:5173
-@apiKey = your-api-key-here
+@baseUrl = https://log.cardm.top
+@apiKey = sk-96918c3c856663515067bd065450bf957c1016f5f8573dd86c4a2bc7416622f5
 
 ### ============================================================
 ### 服务信息 (无需认证)
