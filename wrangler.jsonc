@@ -2,8 +2,9 @@
   "name": "flare-log",
   "compatibility_date": "2025-08-03",
   "main": "./src/index.ts",
+  // 静态资源目录, 包含前端页面
   "assets": {
-    "not_found_handling": "single-page-application"
+    "directory": "./public"
   },
   // 部署时保留 Dashboard 中手动配置的变量和绑定, 避免被覆盖
   "keep_vars": true,

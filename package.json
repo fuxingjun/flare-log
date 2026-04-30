@@ -2,20 +2,15 @@
   "name": "flare-log",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "$npm_execpath run build && vite preview",
-    "deploy": "$npm_execpath run build && wrangler deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "hono": "^4.12.15"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.2.3",
     "@cloudflare/workers-types": "^4.20260426.1",
     "typescript": "^6.0.3",
-    "vite": "^6.3.5",
     "wrangler": "^4.17.0"
   }
 }

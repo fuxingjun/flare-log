@@ -52,7 +52,8 @@ app.use('/api/logs/batch', rateLimit({ windowMs: 60_000, maxRequests: 20 }))
 
 app.use('/api/*', auth)
 
-app.get('/', (c) => {
+/** 服务信息接口, 供 API 消费者检查服务状态和版本 */
+app.get('/api', (c) => {
   return c.json({
     name: 'FlareLog',
     version: '0.2.0',
