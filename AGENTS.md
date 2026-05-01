@@ -37,10 +37,11 @@ src/
 │   └── rateLimit.ts          # 基于 IP 的内存限流 (尽力而为, 生产建议用 CF 自带规则)
 └── routes/
     ├── ingest.ts             # 日志写入接口 (POST /, POST /batch)
-    ├── query.ts              # 日志查询接口 (GET /, GET /:id)
+    ├── query.ts              # 日志查询接口 (GET /, GET /services, GET /:id)
     └── manage.ts             # 日志删除接口 (DELETE /, DELETE /:id)
 public/
-└── index.html                # 前端日志查看器 (暗色主题, 单文件 SPA)
+├── index.html                # 前端日志查看器 (暗色主题, 单文件 SPA)
+└── docs.html                 # API 文档页面
 migrations/
 ├── 0001_initial.sql          # 初始表结构和基础索引
 └── 0002_add_composite_indexes.sql  # 复合索引 (优化常见查询场景)
@@ -55,16 +56,20 @@ migrations/
 3. 在 Worker 的 Settings > Environment Variables 中添加 `API_KEY` 环境变量
 4. 使用 `npm run deploy` 或 `wrangler deploy` 部署
 
-部署命令会自动上传 `public/` 目录中的前端页面和 Worker 代码。数据库表结构会在首次请求时自动创建, 无需手动执行 SQL。
+部署命令会自动上传 `public/` 目录中的前端页面和 Worker 代码, 并根据 `wrangler.jsonc` 中的 `assets` 配置自动设置静态资源服务和 ASSETS 绑定。数据库表结构会在首次请求时自动创建, 无需手动执行 SQL。
+
+> **注意**: `wrangler.jsonc` 中配置了 `run_worker_first: true` 和 `binding: "ASSETS"`, Worker 会优先处理所有请求, 未匹配的路径通过 `env.ASSETS.fetch()` 转发到静态资源层。`not_found_handling` 设为 `none`, SPA fallback 由 Worker 代码手动实现。
 
 ## API 接口
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| `GET` | `/` | 服务信息 | 否 |
+| `GET` | `/api` | 服务信息 | 否 |
+| `GET` | `/docs` | API 文档页面 | 否 |
 | `POST` | `/api/logs` | 接收单条日志 | 是 |
 | `POST` | `/api/logs/batch` | 批量接收日志 (≤100条) | 是 |
 | `GET` | `/api/logs` | 查询日志 (支持过滤+分页+排序) | 是 |
+| `GET` | `/api/logs/services` | 查询去重的 service 列表 (用于下拉选项) | 是 |
 | `GET` | `/api/logs/:id` | 查询单条日志 | 是 |
 | `DELETE` | `/api/logs/:id` | 删除单条日志 | 是 |
 | `DELETE` | `/api/logs` | 批量清理日志 (按 service/before) | 是 |
@@ -89,7 +94,7 @@ migrations/
 |------|------|
 | `level` | 单个日志级别 (debug/info/warn/error) |
 | `levels` | 多个级别, 逗号分隔 (如 `error,warn`) |
-| `service` | 按服务名精确匹配 |
+| `service` | 按服务名模糊匹配 |
 | `trace_id` | 按链路追踪 ID 精确匹配 |
 | `message` | 消息内容模糊搜索 |
 | `start_time` / `end_time` | 时间范围过滤 (ISO 8601) |
