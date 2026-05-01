@@ -51,12 +51,12 @@ migrations/
 
 部署时无需修改任何代码, 只需在 Cloudflare Dashboard 中完成以下配置:
 
-1. 创建 D1 数据库
-2. 在 Worker 的 Settings > Bindings 中绑定 D1 数据库, 变量名设为 `DB`
+1. 在 Cloudflare Dashboard 中创建 D1 数据库, 记录生成的 `database_id`
+2. 将 `database_id` 填入 `wrangler.jsonc` 中 `d1_databases` 的 `database_id` 字段
 3. 在 Worker 的 Settings > Environment Variables 中添加 `API_KEY` 环境变量
 4. 使用 `npm run deploy` 或 `wrangler deploy` 部署
 
-部署命令会自动上传 `public/` 目录中的前端页面和 Worker 代码, 并根据 `wrangler.jsonc` 中的 `assets` 配置自动设置静态资源服务和 ASSETS 绑定。数据库表结构会在首次请求时自动创建, 无需手动执行 SQL。
+部署命令会自动上传 `public/` 目录中的前端页面和 Worker 代码, 并根据 `wrangler.jsonc` 中的配置自动创建 D1 绑定 (`DB`)、静态资源服务和 ASSETS 绑定, 无需手动在 Dashboard 中绑定。数据库表结构会在首次请求时自动创建, 无需手动执行 SQL。
 
 > **注意**: `wrangler.jsonc` 中配置了 `run_worker_first: true` 和 `binding: "ASSETS"`, Worker 会优先处理所有请求, 未匹配的路径通过 `env.ASSETS.fetch()` 转发到静态资源层。`not_found_handling` 设为 `none`, SPA fallback 由 Worker 代码手动实现。
 
